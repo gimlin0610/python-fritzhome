@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def list_all(fritz, args):
     """Command that prints all device information."""
-    devices = fritz.get_devices()
+   # devices = fritz.get_devices()
 
     for device in devices:
         print('#' * 30)
