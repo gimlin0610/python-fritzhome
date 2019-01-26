@@ -16,6 +16,39 @@ from pyfritzhome import Fritzhome
 _LOGGER = logging.getLogger(__name__)
 
 
+def list_thermostats(fritz, args):
+    """Command that prints all thermostat device information."""
+    devices = fritz.get_thermostat_devices()
+
+    for device in devices:
+
+        print('#' * 30)
+        print("Thermostat:")
+        print('name=%s' % device.name)
+        print('  ain=%s' % device.ain)
+        print('  id=%s' % device.identifier)
+        print('  productname=%s' % device.productname)
+        print('  manufacturer=%s' % device.manufacturer)
+        print("  present=%s" % device.present)
+        print("  lock=%s" % device.lock)
+        print("  devicelock=%s" % device.device_lock)
+        print("  battery_low=%s" % device.battery_low)
+        print("  battery_level=%s" % device.battery_level)
+        print("  actual=%s" % device.actual_temperature)
+        print("  target=%s" % device.target_temperature)
+        print("  comfort=%s" % device.comfort_temperature)
+        print("  eco=%s" % device.eco_temperature)
+        print("  window=%s" % device.window_open)
+        print("  summer=%s" % device.summer_active)
+        print("  holiday=%s" % device.holiday_active)
+
+        if device.present is False:
+            continue
+        if device.has_alarm:
+            print(" Alert:")
+            print("  alert=%s" % device.alert_state)
+
+
 def list_all(fritz, args):
     """Command that prints all device information."""
     devices = fritz.get_devices()
@@ -121,6 +154,10 @@ def main(args=None):
     # list all devices
     subparser = _sub.add_parser('list', help='List all available devices')
     subparser.set_defaults(func=list_all)
+
+    # list all thermostat devices
+    subparser = _sub.add_parser('thermostats', help='List all available thermostat devices')
+    subparser.set_defaults(func=list_thermostats)
 
     # device
     subparser = _sub.add_parser('device', help='Device/Actor commands')

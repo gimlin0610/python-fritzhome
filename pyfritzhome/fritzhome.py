@@ -140,6 +140,15 @@ class Fritzhome(object):
                 return element
         return None
 
+    def get_thermostat_devices(self):
+        """Get the list of all thermostat devices."""
+        devices = []
+        for element in self.get_device_elements():
+            device = FritzhomeDevice(self, node=element)
+            if device.has_thermostat:
+             devices.append(device)
+        return devices
+
     def get_devices(self):
         """Get the list of all known devices."""
         devices = []
