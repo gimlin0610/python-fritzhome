@@ -5,6 +5,8 @@
 from __future__ import print_function
 import logging
 import argparse
+import distutils.dir_util
+import datetime
 
 try:
     from version import __version__
@@ -14,6 +16,18 @@ except ImportError:
 from pyfritzhome import Fritzhome
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def write_temparature_longterm(fritz, args):
+    """Command that write actual thermostat temerature to a file"""
+    devices = fritz.get_thermostat_devices()
+    year = datetime.date.today().year
+    month = datetime.date.today().month
+    distutils.dir_util.mkpath('%s/%s' % (year,month))
+    """Create csv file per device"""
+    for device in devices:
+        f = open('%s/%s/%s' % (year,month,device.name), 'w+')
+        f.write('Time,actualTemperature,targetTemperature')
 
 
 def list_thermostats(fritz, args):
@@ -249,6 +263,10 @@ def main(args=None):
     # list all devices
     subparser = _sub.add_parser("list", help="List all available devices")
     subparser.set_defaults(func=list_all)
+
+    # write actual temperature into file for long term history
+    subparser = _sub.add_parser('writelongterm', help='writes actual temperature of thermostat devices into a csv file')
+    subparser.set_defaults(func=write_temparature_longterm)
 
     # list all thermostat devices
     subparser = _sub.add_parser('thermostats', help='List all available thermostat devices')
