@@ -7,6 +7,7 @@ import logging
 import argparse
 import distutils.dir_util
 import datetime
+import os
 
 try:
     from version import __version__
@@ -20,14 +21,25 @@ _LOGGER = logging.getLogger(__name__)
 
 def write_temparature_longterm(fritz, args):
     """Command that write actual thermostat temerature to a file"""
+    targetpath = "/var/fritzhome"
     devices = fritz.get_thermostat_devices()
     year = datetime.date.today().year
     month = datetime.date.today().month
-    distutils.dir_util.mkpath('%s/%s' % (year,month))
-    """Create csv file per device"""
+    timestamp = datetime.datetime.utcnow()
+    distutils.dir_util.mkpath('%s/%s/%s' % (targetpath,year,month))
+    """Create csv file per device if not present"""
     for device in devices:
-        f = open('%s/%s/%s' % (year,month,device.name), 'w+')
-        f.write('Time,actualTemperature,targetTemperature')
+        if os.path.isfile('%s/%s/%s/%s' % (targetpath,year,month,device.name)):
+            f = open('%s/%s/%s/%s' % (targetpath,year,month,device.name), 'a')
+            f.write('%s,%s,%s,%s\n' % (timestamp,device.name,device.actual_temperature,device.target_temperature))
+            f.close()
+        else:
+            f = open('%s/%s/%s/%s' % (targetpath,year,month,device.name), 'w+')
+            f.write('Time,SensorName,actualTemperature,targetTemperature\n')
+            f.close()
+            f = open('%s/%s/%s/%s' % (targetpath,year,month,device.name), 'a')
+            f.write('%s,%s,%s,%s\n' % (timestamp,device.name,device.actual_temperature,device.target_temperature))
+            f.close()
 
 
 def list_thermostats(fritz, args):
