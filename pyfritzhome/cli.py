@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def write_temparature_longterm(fritz, args):
-    """Command that write actual thermostat temerature to a file"""
+    """Command that write actual thermostat temperature to a file"""
     targetpath = "/var/fritzhome"
     devices = fritz.get_thermostat_devices()
     year = datetime.date.today().year
@@ -40,6 +40,27 @@ def write_temparature_longterm(fritz, args):
             f = open('%s/%s/%s/%s' % (targetpath,year,month,device.name), 'a')
             f.write('%s,%s,%s,%s\n' % (timestamp,device.name,device.actual_temperature,device.target_temperature))
             f.close()
+
+
+def list_alert_sensors(fritz, args):
+    """Command that prints all alert sensor device information."""
+    devices = fritz.get_alert_sensors()
+    for device in devices:
+        print('#' * 30)
+        print("Alert Sensor:")
+        print('name=%s' % device.name)
+        print('  ain=%s' % device.ain)
+        print('  id=%s' % device.identifier)
+        print('  productname=%s' % device.productname)
+        print('  manufacturer=%s' % device.manufacturer)
+        print("  present=%s" % device.present)
+        print("  lock=%s" % device.lock)
+        print("  devicelock=%s" % device.device_lock)
+        if device.present is False:
+            continue
+        if device.has_alarm:
+            print(" Alert:")
+            print("  alert=%s" % device.alert_state)
 
 
 def list_thermostats(fritz, args):
@@ -184,6 +205,10 @@ def main(args=None):
     # write actual temperature into file for long term history
     subparser = _sub.add_parser('writelongterm', help='writes actual temperature of thermostat devices into a csv file')
     subparser.set_defaults(func=write_temparature_longterm)
+
+    # show optical sensor state
+    subparser = _sub.add_parser('showalertsensorstate', help='return state of alert sensor')
+    subparser.set_defaults(func=show_alert_sensor_state)
 
     # list all thermostat devices
     subparser = _sub.add_parser('thermostats', help='List all available thermostat devices')
