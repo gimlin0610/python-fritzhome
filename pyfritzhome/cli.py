@@ -271,13 +271,12 @@ def main(args=None):
                            help='Actor Identification')
     subparser.set_defaults(func=switch_toggle)
 
-
     # alert
     subparser = _sub.add_parser('alert', help='alert commands')
     _sub_alert = subparser.add_subparsers()
 
     # alert get
-    subparser = _sub_alert.add_parser('get', help='get state')
+    subparser = _sub_alert.add_parser('get', help='alert get returns state')
     subparser.add_argument('ain', type=str, metavar="AIN",
                            help='Actor Identification')
     subparser.set_defaults(func=alert_get)
