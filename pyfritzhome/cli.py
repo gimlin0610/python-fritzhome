@@ -207,8 +207,8 @@ def main(args=None):
     subparser.set_defaults(func=write_temparature_longterm)
 
     # show optical sensor state
-    subparser = _sub.add_parser('showalertsensorstate', help='return state of alert sensor')
-    subparser.set_defaults(func=show_alert_sensor_state)
+    subparser = _sub.add_parser('alertsensors', help='return state of alert sensor')
+    subparser.set_defaults(func=list_alert_sensors)
 
     # list all thermostat devices
     subparser = _sub.add_parser('thermostats', help='List all available thermostat devices')
