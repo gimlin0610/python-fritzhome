@@ -163,6 +163,11 @@ def switch_get(fritz, args):
     print(fritz.get_switch_state(args.ain))
 
 
+def alert_get(fritz, args):
+    """Command that get the device switch state."""
+    print(fritz.get_alert_state(args.ain))
+
+
 def switch_on(fritz, args):
     """Command that set the device switch state to on."""
     fritz.set_switch_state_on(args.ain)
@@ -265,6 +270,18 @@ def main(args=None):
     subparser.add_argument('ain', type=str, metavar="AIN",
                            help='Actor Identification')
     subparser.set_defaults(func=switch_toggle)
+
+
+    # alert
+    subparser = _sub.add_parser('alert', help='alert commands')
+    _sub_alert = subparser.add_subparsers()
+
+    # alert get
+    subparser = _sub_alert.add_parser('get', help='get state')
+    subparser.add_argument('ain', type=str, metavar="AIN",
+                           help='Actor Identification')
+    subparser.set_defaults(func=alert_get)
+
 
     args = parser.parse_args(args)
 
