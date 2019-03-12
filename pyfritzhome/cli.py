@@ -13,7 +13,6 @@ import matplotlib.pyplot as pyplot
 import pandas as pandas
 from settings import *
 
-
 try:
     from version import __version__
 except ImportError:
@@ -23,8 +22,38 @@ from pyfritzhome import Fritzhome
 
 _LOGGER = logging.getLogger(__name__)
 
-def generate_dataset(startdate, enddate, datafile):
+def generate_report(args):
+    if args.month:
+        monthly_report(args.month)
+        print("Hallo")
+        year = dt.date.today().year
+        dayofmonth = dt.date.today().day
+        datasource_dir_name = datasource_datebased_dir_name + str(year) + "/" + str(month) + "/"
+        startdate = datetime(year,month,1)
+        enddate = datetime(year,month+1,1)
+        all_data_files = get_list_of_files(datasource_dir_name)
 
+    elif args.day:
+        year = dt.date.today().year
+        month = dt.date.today().month
+        dayofmonth = dt.date.today().day
+        N = 1
+        startdate = datetime.now() - timedelta(days=N)
+        enddate = datetime.now()
+        datasource_dir_name = datasource_datebased_dir_name + str(year) + "/" + str(month) + "/"
+        all_data_files = get_list_of_files(datasource_dir_name)
+
+    elif args.week:
+        year = dt.date.today().year
+        month = dt.date.today().month
+        dayofmonth = dt.date.today().day
+        N = 7
+        startdate = datetime.now() - timedelta(days=N)
+        enddate = datetime.now()
+        datasource_dir_name = datasource_datebased_dir_name + str(year) + "/" + str(month) + "/"
+        all_data_files = get_list_of_files(datasource_dir_name)
+
+def generate_dataset(startdate, enddate, datafile):
     # Load DataSet
     dataset = pandas.read_csv(datafile, sep=",", header=0, usecols=['Time', 'actualTemperature', 'targetTemperature'],
                               parse_dates=['Time'])
@@ -248,19 +277,10 @@ def switch_toggle(fritz, args):
 
 def main(args=None):
     """The main function."""
-    year = dt.date.today().year
-    month = dt.date.today().month
-    dayofmonth = dt.date.today().day
     distutils.dir_util.mkpath('%s/' % (output_dir_name))
 
     parser = argparse.ArgumentParser(
         description='Fritz!Box Smarthome CLI tool.')
-
-    parser.add_argument('-d','--day', action='store_true', dest='day',
-                        help='create temerature report for last 24h')
-
-    parser.add_argument('-w','--week', action='store_true', dest='week',
-                        help='create temerature report for last 7 days')
 
     parser.add_argument('-m','--month',
                         type=int,
@@ -272,10 +292,6 @@ def main(args=None):
 
     parser.add_argument('-s', action='store_true', dest='show',
                         help='show graph')
-
-
-    #parser = argparse.ArgumentParser(
-    #   description='Fritz!Box Smarthome CLI tool.')
     parser.add_argument('-v', action='store_true', dest='verbose',
                         help='be more verbose')
     parser.add_argument('-f', '--fritzbox', type=str, dest='host',
@@ -291,6 +307,10 @@ def main(args=None):
                         help='Print version')
 
     _sub = parser.add_subparsers(title='Commands')
+
+    # Generate report
+    subparser = _sub.add_parser('report', help='Generate Report')
+    subparser.set_defaults(func=generate_report)
 
     # list all devices
     subparser = _sub.add_parser('list', help='List all available devices')
@@ -377,41 +397,17 @@ def main(args=None):
     if args.verbose:
         logging.getLogger('pyfritzhome').setLevel(logging.DEBUG)
 
-    fritzbox = None
-    try:
-        fritzbox = Fritzhome(host=args.host, user=args.user,
-                             password=args.password)
-        fritzbox.login()
-        args.func(fritzbox, args)
-    finally:
-        if fritzbox is not None:
-            fritzbox.logout()
-
-    elif args.day:
-        N = 1
-        startdate = datetime.now() - timedelta(days=N)
-        enddate = datetime.now()
-        datasource_dir_name = datasource_datebased_dir_name + str(year) + "/" + str(month) + "/"
-
-    elif args.week:
-        N = 7
-        startdate = datetime.now() - timedelta(days=N)
-        enddate = datetime.now()
-        datasource_dir_name = datasource_datebased_dir_name + str(year) + "/" + str(month) + "/"
-
-    elif args.month:
-        month=args.month
-        datasource_dir_name = datasource_datebased_dir_name + str(year) + "/" + str(month) + "/"
-        startdate = datetime(year,month,1)
-        enddate = datetime(year,month+1,1)
-        print startdate
-        print enddate
-
     else:
-        startdate = "2019-01-01 00:00:00.000000"
-        enddate = "2019-12-31 23:59:59.999999"
-
-    all_data_files = get_list_of_files(datasource_dir_name)
+        print(args)
+        fritzbox = None
+        try:
+            fritzbox = Fritzhome(host=args.host, user=args.user,
+                            password=args.password)
+            fritzbox.login()
+            args.func(fritzbox, args)
+        finally:
+            if fritzbox is not None:
+                 fritzbox.logout()
 
 
 if __name__ == '__main__':
