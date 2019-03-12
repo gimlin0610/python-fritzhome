@@ -6,8 +6,13 @@ from __future__ import print_function
 import logging
 import argparse
 import distutils.dir_util
-import datetime
 import os
+import datetime as dt
+from datetime import datetime, timedelta
+import matplotlib.pyplot as pyplot
+import pandas as pandas
+from settings import *
+
 
 try:
     from version import __version__
@@ -18,14 +23,72 @@ from pyfritzhome import Fritzhome
 
 _LOGGER = logging.getLogger(__name__)
 
+def generate_dataset(startdate, enddate, datafile):
+
+    # Load DataSet
+    dataset = pandas.read_csv(datafile, sep=",", header=0, usecols=['Time', 'actualTemperature', 'targetTemperature'],
+                              parse_dates=['Time'])
+    print('loading %s' % datafile)
+    dataset.set_index('Time', inplace=True)
+    dataset.index = pandas.to_datetime(dataset.index)
+    dataset = dataset.loc[startdate:enddate]
+    # clear dataframes from missing values
+    dataset['actualTemperature'] = pandas.to_numeric(dataset['actualTemperature'], errors='coerce')
+    dataset['targetTemperature'] = pandas.to_numeric(dataset['targetTemperature'], errors='coerce')
+    var1 = dataset.groupby('Time').actualTemperature.sum()
+    var2 = dataset.groupby('Time').targetTemperature.sum()
+    return (var1, var2)
+
+
+def save_graph(enddate, startdate, var1, var2, filename):
+    # Build the graph
+    now = datetime.now()
+    starttimestamp = startdate.strftime("%d-%m-%Y")
+    endtimestamp = enddate.strftime("%d-%m-%Y")
+    report_file = output_dir_name + filename + "_" + starttimestamp + "_" + endtimestamp + ".svg"
+    fig = pyplot.figure()
+    ax1 = fig.add_subplot(1, 1, 1)
+    ax2 = ax1.twinx()
+    ax1.set_xlabel('Zeit')
+    ax1.set_ylabel('actualTemperature')
+    ax2.set_ylabel('targetTemperature')
+    ax1.axes.yaxis.set_ticklabels([])
+    var1.plot(kind='line')
+    var2.plot(kind='line')
+    pyplot.title(filename)
+    pyplot.setp(ax1.get_xticklabels(), rotation=30)
+    pyplot.savefig(report_file)
+
+
+def show_graph(var1, var2, filename):
+    # Build the graph
+    fig = pyplot.figure()
+    ax1 = fig.add_subplot(1, 1, 1)
+    ax2 = ax1.twinx()
+    ax1.set_xlabel('Zeit')
+    ax1.set_ylabel('actualTemperature')
+    ax2.set_ylabel('targetTemperature')
+    ax1.axes.yaxis.set_ticklabels([])
+    var1.plot(kind='line')
+    var2.plot(kind='line')
+    pyplot.title(filename)
+    pyplot.setp(ax1.get_xticklabels(), rotation=30)
+    pyplot.show()
+
+
+def get_list_of_files(datasource_dir_name):
+    # create a list of file and sub directories
+    # names in the given directory
+    all_data_files = os.listdir(datasource_dir_name)
+    return all_data_files
 
 def write_temparature_longterm(fritz, args):
     """Command that write actual thermostat temperature to a file"""
     targetpath = "/var/fritzhome"
     devices = fritz.get_thermostat_devices()
-    year = datetime.date.today().year
-    month = datetime.date.today().month
-    timestamp = datetime.datetime.utcnow()
+    year = dt.date.today().year
+    month = dt.date.today().month
+    timestamp = dt.datetime.utcnow()
     distutils.dir_util.mkpath('%s/%s/%s' % (targetpath,year,month))
     """Create csv file per device if not present"""
     for device in devices:
@@ -185,8 +248,34 @@ def switch_toggle(fritz, args):
 
 def main(args=None):
     """The main function."""
+    year = dt.date.today().year
+    month = dt.date.today().month
+    dayofmonth = dt.date.today().day
+    distutils.dir_util.mkpath('%s/' % (output_dir_name))
+
     parser = argparse.ArgumentParser(
         description='Fritz!Box Smarthome CLI tool.')
+
+    parser.add_argument('-d','--day', action='store_true', dest='day',
+                        help='create temerature report for last 24h')
+
+    parser.add_argument('-w','--week', action='store_true', dest='week',
+                        help='create temerature report for last 7 days')
+
+    parser.add_argument('-m','--month',
+                        type=int,
+                        choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                        action='store',
+                        nargs='?',
+                        dest='month',
+                        help='create temerature report for given month 1-12')
+
+    parser.add_argument('-s', action='store_true', dest='show',
+                        help='show graph')
+
+
+    #parser = argparse.ArgumentParser(
+    #   description='Fritz!Box Smarthome CLI tool.')
     parser.add_argument('-v', action='store_true', dest='verbose',
                         help='be more verbose')
     parser.add_argument('-f', '--fritzbox', type=str, dest='host',
@@ -297,6 +386,32 @@ def main(args=None):
     finally:
         if fritzbox is not None:
             fritzbox.logout()
+
+    elif args.day:
+        N = 1
+        startdate = datetime.now() - timedelta(days=N)
+        enddate = datetime.now()
+        datasource_dir_name = datasource_datebased_dir_name + str(year) + "/" + str(month) + "/"
+
+    elif args.week:
+        N = 7
+        startdate = datetime.now() - timedelta(days=N)
+        enddate = datetime.now()
+        datasource_dir_name = datasource_datebased_dir_name + str(year) + "/" + str(month) + "/"
+
+    elif args.month:
+        month=args.month
+        datasource_dir_name = datasource_datebased_dir_name + str(year) + "/" + str(month) + "/"
+        startdate = datetime(year,month,1)
+        enddate = datetime(year,month+1,1)
+        print startdate
+        print enddate
+
+    else:
+        startdate = "2019-01-01 00:00:00.000000"
+        enddate = "2019-12-31 23:59:59.999999"
+
+    all_data_files = get_list_of_files(datasource_dir_name)
 
 
 if __name__ == '__main__':
