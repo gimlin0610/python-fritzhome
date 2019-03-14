@@ -28,7 +28,7 @@ def generate_report(args):
         month = args.month
         year = dt.date.today().year
         dayofmonth = dt.date.today().day
-        datasource_dir_name = datasource_datebased_dir_name + str(year) + "/" + str(month) + "/"
+        datasource_dir_name = datasource_datebased_dir_name + "/" + str(year) + "/" + str(month) + "/"
         startdate = datetime(year,month,1)
         enddate = datetime(year,month+1,1)
         all_data_files = get_list_of_files(datasource_dir_name)
@@ -44,7 +44,7 @@ def generate_report(args):
         N = 1
         startdate = datetime.now() - timedelta(days=N)
         enddate = datetime.now()
-        datasource_dir_name = datasource_datebased_dir_name + str(year) + "/" + str(month) + "/"
+        datasource_dir_name = datasource_datebased_dir_name + "/" + str(year) + "/" + str(month) + "/"
         all_data_files = get_list_of_files(datasource_dir_name)
 
     elif args.week:
@@ -54,7 +54,7 @@ def generate_report(args):
         N = 7
         startdate = datetime.now() - timedelta(days=N)
         enddate = datetime.now()
-        datasource_dir_name = datasource_datebased_dir_name + str(year) + "/" + str(month) + "/"
+        datasource_dir_name = datasource_datebased_dir_name + "/" + str(year) + "/" + str(month) + "/"
         all_data_files = get_list_of_files(datasource_dir_name)
 
 def generate_dataset(startdate, enddate, datafile):
@@ -100,23 +100,22 @@ def get_list_of_files(datasource_dir_name):
 
 def write_temparature_longterm(fritz, args):
     """Command that write actual thermostat temperature to a file"""
-    targetpath = "/var/fritzhome"
     devices = fritz.get_thermostat_devices()
     year = dt.date.today().year
     month = dt.date.today().month
     timestamp = dt.datetime.utcnow()
-    distutils.dir_util.mkpath('%s/%s/%s' % (targetpath,year,month))
+    distutils.dir_util.mkpath('%s/%s/%s' % (datasource_datebased_dir_name,year,month))
     """Create csv file per device if not present"""
     for device in devices:
-        if os.path.isfile('%s/%s/%s/%s' % (targetpath,year,month,device.name)):
-            f = open('%s/%s/%s/%s' % (targetpath,year,month,device.name), 'a')
+        if os.path.isfile('%s/%s/%s/%s' % (datasource_datebased_dir_name,year,month,device.name)):
+            f = open('%s/%s/%s/%s' % (datasource_datebased_dir_name,year,month,device.name), 'a')
             f.write('%s,%s,%s,%s\n' % (timestamp,device.name,device.actual_temperature,device.target_temperature))
             f.close()
         else:
-            f = open('%s/%s/%s/%s' % (targetpath,year,month,device.name), 'w+')
+            f = open('%s/%s/%s/%s' % (datasource_datebased_dir_name,year,month,device.name), 'w+')
             f.write('Time,SensorName,actualTemperature,targetTemperature\n')
             f.close()
-            f = open('%s/%s/%s/%s' % (targetpath,year,month,device.name), 'a')
+            f = open('%s/%s/%s/%s' % (datasource_datebased_dir_name,year,month,device.name), 'a')
             f.write('%s,%s,%s,%s\n' % (timestamp,device.name,device.actual_temperature,device.target_temperature))
             f.close()
 
@@ -287,10 +286,6 @@ def main(args=None):
 
     _sub = parser.add_subparsers(title='Commands')
 
-    # Generate report
-    subparser = _sub.add_parser('report', help='Generate Report')
-    subparser.set_defaults(func=generate_report)
-
     # list all devices
     subparser = _sub.add_parser('list', help='List all available devices')
     subparser.set_defaults(func=list_all)
@@ -373,7 +368,6 @@ def main(args=None):
     subparser = _sub.add_parser('report', help='report commands')
 
     # Report monthly
-
     _sub_report = subparser.add_subparsers()
     subparser = _sub_report.add_parser('monthly',
                             help='generate report of last month')
@@ -382,7 +376,6 @@ def main(args=None):
                         choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
                         action='store',
                         nargs='?',
-                        #dest='month',
                         help='create temerature report for given month 1-12')
 
     args = parser.parse_args(args)
