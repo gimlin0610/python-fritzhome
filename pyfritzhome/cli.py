@@ -22,16 +22,20 @@ from pyfritzhome import Fritzhome
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def generate_report(args):
     if args.month:
-        monthly_report(args.month)
-        print("Hallo")
+        month = args.month
         year = dt.date.today().year
         dayofmonth = dt.date.today().day
         datasource_dir_name = datasource_datebased_dir_name + str(year) + "/" + str(month) + "/"
         startdate = datetime(year,month,1)
         enddate = datetime(year,month+1,1)
         all_data_files = get_list_of_files(datasource_dir_name)
+        for filename in all_data_files:
+            datafile = datasource_dir_name + filename
+            var1, var2 = generate_dataset(startdate, enddate, datafile)
+            save_graph(enddate, startdate, var1, var2, filename)
 
     elif args.day:
         year = dt.date.today().year
@@ -87,23 +91,6 @@ def save_graph(enddate, startdate, var1, var2, filename):
     pyplot.title(filename)
     pyplot.setp(ax1.get_xticklabels(), rotation=30)
     pyplot.savefig(report_file)
-
-
-def show_graph(var1, var2, filename):
-    # Build the graph
-    fig = pyplot.figure()
-    ax1 = fig.add_subplot(1, 1, 1)
-    ax2 = ax1.twinx()
-    ax1.set_xlabel('Zeit')
-    ax1.set_ylabel('actualTemperature')
-    ax2.set_ylabel('targetTemperature')
-    ax1.axes.yaxis.set_ticklabels([])
-    var1.plot(kind='line')
-    var2.plot(kind='line')
-    pyplot.title(filename)
-    pyplot.setp(ax1.get_xticklabels(), rotation=30)
-    pyplot.show()
-
 
 def get_list_of_files(datasource_dir_name):
     # create a list of file and sub directories
@@ -282,14 +269,6 @@ def main(args=None):
     parser = argparse.ArgumentParser(
         description='Fritz!Box Smarthome CLI tool.')
 
-    parser.add_argument('-m','--month',
-                        type=int,
-                        choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-                        action='store',
-                        nargs='?',
-                        dest='month',
-                        help='create temerature report for given month 1-12')
-
     parser.add_argument('-s', action='store_true', dest='show',
                         help='show graph')
     parser.add_argument('-v', action='store_true', dest='verbose',
@@ -390,15 +369,28 @@ def main(args=None):
                            help='Actor Identification')
     subparser.set_defaults(func=alert_get)
 
+    # Report
+    subparser = _sub.add_parser('report', help='report commands')
+
+    # Report monthly
+
+    _sub_report = subparser.add_subparsers()
+    subparser = _sub_report.add_parser('monthly',
+                            help='generate report of last month')
+    subparser.add_argument('month',
+                        type=int,
+                        choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                        action='store',
+                        nargs='?',
+                        #dest='month',
+                        help='create temerature report for given month 1-12')
 
     args = parser.parse_args(args)
 
     logging.basicConfig()
-    if args.verbose:
-        logging.getLogger('pyfritzhome').setLevel(logging.DEBUG)
-
-    else:
-        print(args)
+    if(args.user != None):
+        if args.verbose:
+            logging.getLogger('pyfritzhome').setLevel(logging.DEBUG)
         fritzbox = None
         try:
             fritzbox = Fritzhome(host=args.host, user=args.user,
@@ -408,6 +400,8 @@ def main(args=None):
         finally:
             if fritzbox is not None:
                  fritzbox.logout()
+    else:
+        generate_report(args)
 
 
 if __name__ == '__main__':
