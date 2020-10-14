@@ -149,6 +149,16 @@ class Fritzhome(object):
              devices.append(device)
         return devices
 
+    def get_temperature_devices(self):
+        """Get the list of all temperature devices."""
+        devices = []
+        for element in self.get_device_elements():
+            device = FritzhomeDevice(self, node=element)
+            if device.has_temperature_sensor:
+             devices.append(device)
+        return devices
+
+
     def get_alert_sensors(self):
         """Get the list of all optical sensors devices."""
         devices = []
