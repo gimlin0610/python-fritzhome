@@ -41,10 +41,10 @@ def write_temparature_longterm(fritz, args):
             f = open('%s/%s/%s/%s' % (targetpath,year,month,device.name), 'a')
             f.write('%s,%s,%s,%s\n' % (timestamp,device.name,device.temperature,device.target_temperature))
             f.close()
-    f = open('%s/%s' % (targetpath, 'device_list.txt'), 'w+')
-    for device in devices:
-        f.write('Device-Name: %s \n' % device)
-    f.close()
+    #f = open('%s/%s' % (targetpath, 'device_list.txt'), 'w+')
+    #for device in devices:
+    #    f.write('Device-Name: %s \n' % device)
+    #f.close()
 
 
 def list_alert_sensors(fritz, args):
