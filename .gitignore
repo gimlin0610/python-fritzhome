@@ -11,3 +11,4 @@ dist/
 .noseids
 coverage.xml
 /pyfritzhome/2024/
+/runner_script.sh
