@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# copy to /usr/local/bin
+# runner_script.sh venv https://github.com/gimlin0610/python-fritzhome.git /srv/python-fritzhome "-f fritz.box -u api -p Rapi2018 writelongterm"
+
 # Function to handle errors and provide informative messages
 error_exit() {
   local code="${1:-1}"  # Default exit code is 1
@@ -50,5 +53,3 @@ deactivate
 
 echo "Script execution completed."
 
-# ./runner_script.sh .venv https://github.com/gimlin0610/python-fritzhome.git /home/bauer/PycharmProjects/python-fritzhome "-f fritz.box -u api -p Rapi2018 writelongterm"
-# sh runner_script.sh venv https://github.com/gimlin0610/python-fritzhome.git pyfritzhome "python3 cli.py -f fritz.box -u api -p Rapi2018 writelongterm"
