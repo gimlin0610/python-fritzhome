@@ -3,7 +3,7 @@
 # copy to /usr/local/bin
 # runner_script.sh venv https://github.com/gimlin0610/python-fritzhome.git /srv/python-fritzhome "-f fritz.box -u api -p Rapi2018 writelongterm"
 # crontab -e
-# */15 * * * * runner_script.sh venv https://github.com/gimlin0610/python-fritzhome.git /srv/python-fritzhome "-f fritz.box -u api -p Rapi2018 writelongterm"
+# */15 * * * * /usr/local/bin/runner_script.sh /srv/python-fritzhome/venv https://github.com/gimlin0610/python-fritzhome.git /srv/python-fritzhome "-f fritz.box -u api -p Rapi2018 writelongterm"
 
 # Function to handle errors and provide informative messages
 error_exit() {
