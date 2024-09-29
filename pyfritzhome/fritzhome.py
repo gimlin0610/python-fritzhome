@@ -227,7 +227,6 @@ class Fritzhome(object):
              devices.append(device)
         return devices
 
-
     def get_devices(self):
         """Get the list of all known devices."""
         return list(self.get_devices_as_dict().values())
