@@ -1,10 +1,8 @@
 #!/bin/bash
-
 # copy to /usr/local/bin
 # runner_script.sh venv https://github.com/gimlin0610/python-fritzhome.git /srv/python-fritzhome "-f fritz.box -u api -p Rapi2018 writelongterm"
 # crontab -e
 # */15 * * * * /usr/local/bin/runner_script.sh /srv/python-fritzhome/venv https://github.com/gimlin0610/python-fritzhome.git /srv/python-fritzhome "-f fritz.box -u api -p Rapi2018 writelongterm"
-export INFLUXDB_TOKEN=VrmRq6LReMXLUUASYblbNidcNyR-_pywXJAeYqO1FvzLsd17zYF4pBjSuMXVNqi_od89MMUgpe00_sA8h6xy4A==
 # Function to handle errors and provide informative messages
 error_exit() {
   local code="${1:-1}"  # Default exit code is 1
@@ -54,4 +52,3 @@ python3 "pyfritzhome/cli.py" $script_args
 deactivate
 
 echo "Script execution completed."
-
