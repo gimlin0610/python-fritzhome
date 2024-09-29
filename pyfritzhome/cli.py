@@ -17,7 +17,7 @@ try:
 except ImportError:
     __version__ = "dev"
 
-from pyfritzhome.fritzhome import Fritzhome
+from pyfritzhome import Fritzhome
 
 _LOGGER = logging.getLogger(__name__)
 
