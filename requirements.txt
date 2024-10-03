@@ -5,7 +5,7 @@ cryptography==43.0.0
 idna==3.7
 influxdb-client==1.46.0
 pycparser==2.22
-pyfritzhome==0.6.12
+#pyfritzhome==0.6.12
 python-dateutil==2.9.0.post0
 reactivex==4.0.4
 requests==2.32.3
