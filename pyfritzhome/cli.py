@@ -64,13 +64,13 @@ def write_temperature_long_term_influx(fritz, args):
     for device in devices:
         write_api = write_client.write_api(write_options=SYNCHRONOUS)
         if device.has_thermostat:
-            print("Thermostat_Device: {0}".format(device.name))
+            #print("Thermostat_Device: {0}".format(device.name))
             point = (
                     Point(device.name)
                     .field("temp", device.actual_temperature)
                 )
         elif device.has_temperature_sensor:
-            print("Temp_Sensor_Device: {0}".format(device.name))
+            #print("Temp_Sensor_Device: {0}".format(device.name))
             point = (
                 Point(device.name)
                 .field("temp", device.temperature)
