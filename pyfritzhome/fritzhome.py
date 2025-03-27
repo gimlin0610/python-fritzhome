@@ -216,6 +216,8 @@ class Fritzhome(object):
             device = FritzhomeDevice(self, node=element)
             if device.has_thermostat:
              devices.append(device)
+            elif device.has_temperature_sensor:
+                devices.append(device)
         return devices
 
     def get_powermeter_devices(self):

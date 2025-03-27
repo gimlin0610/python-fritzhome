@@ -44,7 +44,9 @@ class FritzhomeDeviceThermostat(FritzhomeDeviceBase):
     def has_thermostat(self):
         """Check if the device has thermostat function."""
         return self._has_feature(FritzhomeDeviceFeatures.THERMOSTAT)
-
+    def has_temperature_sensor(self):
+        """Check if the device has has_temperature_sensor function."""
+        return self._has_feature(FritzhomeDeviceFeatures.TEMPERATURE)
     def _update_hkr_from_node(self, node):
         _LOGGER.debug("update thermostat device")
         hkr_element = node.find("hkr")

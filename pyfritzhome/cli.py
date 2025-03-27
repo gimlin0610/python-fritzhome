@@ -62,11 +62,19 @@ def write_temperature_long_term_influx(fritz, args):
     """ Create csv file per device """
     for device in devices:
         write_api = write_client.write_api(write_options=SYNCHRONOUS)
+        if device.has_thermostat:
 
-        point = (
+            point = (
+                    Point(device.name)
+                    .field("temp", device.actual_temperature)
+                )
+        elif device.has_temperature_sensor:
+            point = (
                 Point(device.name)
-                .field("temp", device.actual_temperature)
+                .field("temp", device.temperature)
             )
+        else:
+            pass
         write_api.write(bucket=bucket, org=org, record=point)
 
         #temperature_data = [timestamp, device.name, device.actual_temperature, device.target_temperature]
