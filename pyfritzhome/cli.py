@@ -55,6 +55,7 @@ def write_temperature_long_term_influx(fritz, args):
     org = args.org
     bucket = args.bucket
     devices = fritz.get_thermostat_devices()
+    devices.extend(fritz.get_temperature_sensor_devices())
     if not token:        
         print('Token missing!')
         exit(1)
