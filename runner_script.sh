@@ -40,7 +40,8 @@ cd "$working_dir" || error_exit 5 "Failed to change directory to '$working_dir'.
 # Update the Python script from GitHub using a robust approach (adapt as needed)
 # This example uses Git directly. Consider tools like pipenv or poetry if necessary
 git fetch --all  # Fetch all branches and tags
-git reset --hard origin/dev_branch  # Ensure you're on the latest master branch (modify as needed)
+#git reset --hard origin/dev_branch  # Ensure you're on the latest master branch (modify as needed)
+git reset --hard origin/extend_for_power_sockets # Testing since 28.03.2025
 
 # Alternatively, for more complex update logic with pip:
 # pip install --upgrade -U -r requirements.txt
