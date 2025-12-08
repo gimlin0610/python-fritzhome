@@ -5,10 +5,132 @@
 from __future__ import print_function
 import logging
 import argparse
+import distutils.dir_util
+import datetime
+#import os
+import influxdb_client, os, time
+#from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client import Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 from pyfritzhome import Fritzhome, __version__
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def write_temperature_long_term(fritz, args):
+    """Command that write actual thermostat temperature to a file"""
+    targetpath = "/mnt/4TBIronWolfPro01/fritzdata"
+    devices = fritz.get_thermostat_devices()
+    year = datetime.date.today().year
+    month = datetime.date.today().month
+    timestamp = datetime.datetime.utcnow()
+    distutils.dir_util.mkpath('%s/%s/%s' % (targetpath, year, month))
+    """Create csv file per device"""
+    for device in devices:
+        if os.path.isfile('%s/%s/%s/%s' % (targetpath, year, month, device.name)):
+            f = open('%s/%s/%s/%s' % (targetpath, year, month, device.name), 'a')
+            f.write('%s,%s,%s,%s\n' % (timestamp, device.name, device.actual_temperature, 
+                                       device.target_temperature))
+            f.close()
+        else:
+            f = open('%s/%s/%s/%s' % (targetpath, year, month, device.name), 'w+')
+            f.write('Time,SensorName,actualTemperature,targetTemperature\n')
+            f.close()
+            f = open('%s/%s/%s/%s' % (targetpath, year, month, device.name), 'a')
+            f.write('%s,%s,%s,%s\n' % (timestamp, device.name, device.actual_temperature, 
+                                       device.target_temperature))
+            f.close()
+
+
+def write_temperature_long_term_influx(fritz, args):
+    """Command that write actual thermostat temperature to a file"""
+    token = args.token
+    url = args.url
+    org = args.org
+    bucket = args.bucket
+    devices = fritz.get_thermostat_devices()
+    devices.extend(fritz.get_temperature_sensor_devices())
+    if not token:        
+        print('Token missing!')
+        exit(1)
+    write_client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
+    """ Create csv file per device """
+    for device in devices:
+        write_api = write_client.write_api(write_options=SYNCHRONOUS)
+        if device.has_thermostat:
+            #print("Thermostat_Device: {0}".format(device.name))
+            point = (
+                    Point(device.name)
+                    .field("temp", device.actual_temperature)
+                )
+        elif device.has_temperature_sensor:
+            #print("Temp_Sensor_Device: {0}".format(device.name))
+            point = (
+                Point(device.name)
+                .field("temp", device.temperature)
+            )
+        else:
+            pass
+        write_api.write(bucket=bucket, org=org, record=point)
+
+        #temperature_data = [timestamp, device.name, device.actual_temperature, device.target_temperature]
+
+
+def write_power_consumption_long_term_influx(fritz, args):
+    """ Command that write actual power consumption of power-meter devices to influx an db """
+    token = args.token
+    url = args.url
+    org = args.org
+    bucket = args.bucket
+    devices = fritz.get_powermeter_devices()
+    #timestamp = datetime.datetime.utcnow()
+    if not token:
+        print('Token missing!')
+        exit(1)
+    write_client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
+    """ Create csv file per device """
+    for device in devices:
+        write_api = write_client.write_api(write_options=SYNCHRONOUS)
+
+        point = (
+                Point(device.name)
+                .field("consumption", device.power/1000)
+            )
+        write_api.write(bucket=bucket, org=org, record=point)
+
+
+def list_thermostats(fritz, args):
+    """Command that prints all thermostat device information."""
+    devices = fritz.get_thermostat_devices()
+
+    for device in devices:
+
+        print('#' * 30)
+        print("Thermostat:")
+        print('name=%s' % device.name)
+        print('  ain=%s' % device.ain)
+        print('  id=%s' % device.identifier)
+        print('  productname=%s' % device.productname)
+        print('  manufacturer=%s' % device.manufacturer)
+        print("  present=%s" % device.present)
+        print("  lock=%s" % device.lock)
+        print("  devicelock=%s" % device.device_lock)
+        print("  battery_low=%s" % device.battery_low)
+        print("  battery_level=%s" % device.battery_level)
+        print("  actual=%s" % device.actual_temperature)
+        print("  target=%s" % device.target_temperature)
+        print("  comfort=%s" % device.comfort_temperature)
+        print("  eco=%s" % device.eco_temperature)
+        print("  window=%s" % device.window_open)
+        print("  summer=%s" % device.summer_active)
+        print("  holiday=%s" % device.holiday_active)
+
+        if device.present is False:
+            continue
+        if device.has_alarm:
+            print(" Alert:")
+            print("  alert=%s" % device.alert_state)
 
 
 def list_all(fritz, args):
@@ -211,6 +333,34 @@ def main(args=None):
     # list all devices
     subparser = _sub.add_parser("list", help="List all available devices")
     subparser.set_defaults(func=list_all)
+
+    # write actual temperature into file for long term history
+    subparser = _sub.add_parser('writelongterm',
+                                help='writes actual temperature of thermostat devices into a csv file')
+    subparser.set_defaults(func=write_temperature_long_term)
+
+    # write actual temperature into influxdb for long term history
+    subparser = _sub.add_parser('writelongterminflux',
+                                help='writes actual temperature of thermostat devices into a influxdb')
+    subparser.add_argument("-url", type=str, metavar="url", dest="url", help="InfluxDB URL")
+    subparser.add_argument("-org", type=str, metavar="org", dest="org", help="InfluxDB org")
+    subparser.add_argument("-token", type=str, metavar="token", dest="token", help="InfluxDB token")
+    subparser.add_argument("-bucket", type=str, metavar="bucket", dest="bucket", help="InfluxDB bucket")
+    subparser.set_defaults(func=write_temperature_long_term_influx)
+
+    # write actual power consumption into influxdb for long term history
+    subparser = _sub.add_parser('writelongterminfluxpc',
+                                help='writes actual temperature of thermostat devices into a influxdb')
+    subparser.add_argument("-url", type=str, metavar="url", dest="url", help="InfluxDB URL")
+    subparser.add_argument("-org", type=str, metavar="org", dest="org", help="InfluxDB org")
+    subparser.add_argument("-token", type=str, metavar="token", dest="token", help="InfluxDB token")
+    subparser.add_argument("-bucket", type=str, metavar="bucket", dest="bucket", help="InfluxDB bucket")
+    subparser.set_defaults(func=write_power_consumption_long_term_influx)
+
+
+    # list all thermostat devices
+    subparser = _sub.add_parser('thermostats', help='List all available thermostat devices')
+    subparser.set_defaults(func=list_thermostats)
 
     # device
     subparser = _sub.add_parser("device", help="Device/Actor commands")
